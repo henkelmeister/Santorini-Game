@@ -1,57 +1,37 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-/*
-here lies the resting place of my old global varibles. 
-
-int board[7][7];
-bool isNotWon;
 int playerPos;
 int aiPos;
 bool playerWon;
 bool aiWon;
-int pAdjList[8];
-int aiAdjList[8];
-*/
 
-void start();
-bool isDone();
+void start(int board[7][7]);
+bool isDone(int board[7][7]);
 bool isValidInput(int cord,int testinput);
 bool validPlayerMove(int num);
-void printBoard();
+void printBoard(int board[7][7]);
 void movePlayer(int move);
 void moveAi(int move);
 void insertAi();
-void incOctagonal();
-void decOcatagonal();
+void incOctagonal(int pAdjList[], int aiAdjList[], int board[7][7]);
+void decOcatagonal(int pAdjList[], int aiAdjList[], int board[7][7]);
 void doNextMoveAi();
-void updateAdjList();
-void decCord(int cord);
-void incCord(int cord);
-
-//Technically I made one struct to encapsualte my global varibles into a composite data type
-//Therefore there it is only one global varible.
-//You cannot tell me otherwise
-//haha. 
-struct game
-{
-    int board[7][7];
-    bool isNotWon;
-    int playerPos;
-    int aiPos;
-    bool playerWon;
-    bool aiWon;
-    int pAdjList[8];
-    int aiAdjList[8];
-} game;
+void updateAdjList(int pAdjList[],int aiAdjList[]);
+void decCord(int cord,int board[7][7]);
+void incCord(int cord, int board[7][7]);
 
 //Main function where execution of other fuctions occur.
 void main()
 {
-    start();
+    int board[7][7];
+    int pAdjList[8];
+    int aiAdjList[8]; 
+    start(board);
     int moveAttempt;
-    while (!isDone())
+    while (!isDone(board))
     {
+
         printf("\nmake your next move:");
         scanf("%d", &moveAttempt);
         printf("\n");
@@ -59,29 +39,28 @@ void main()
         {
             movePlayer(moveAttempt);
             doNextMoveAi();
-            updateAdjList();
-            incOctagonal();
-            decOcatagonal();
-            printBoard();
+            updateAdjList(pAdjList, aiAdjList);
+            incOctagonal(pAdjList, aiAdjList, board);
+            decOcatagonal(pAdjList, aiAdjList,board);
+            printBoard(board);
             printf("\nPosition updated\n");
         }
     }
-    if (game.playerWon)
+    if (playerWon)
     {
         printf("\nThe player has won!!!\n");
     }
-    if (game.aiWon)
+    if (aiWon)
     {
         printf("\nThe ai has won :(\n");
     }
 }
 
 //Initalizes the game start
-void start()
+void start(int board[7][7])
 {
-    game.isNotWon = true;
-    game.playerWon = false;
-    game.aiWon = false;
+    playerWon = false;
+    aiWon = false;
     int tempboard[7][7] = {
         {0, 1, 2, 3, 4, 5, 6},
         {1, 2, 2, 2, 2, 2, 2},
@@ -95,12 +74,12 @@ void start()
     {
         for (int j = 0; j < 7; j++)
         {
-            game.board[i][j] = tempboard[i][j];
+            board[i][j] = tempboard[i][j];
         }
     }
     //This is where the player selects their starting point
     printf("Welcome to the game\n\n");
-    printf("choose a starting coodinate on the 6x6 board:\n(write in the format of \"14\" for coordinate row 1 column 4 ): ");
+    printf("choose a starting coodinate: (write in the format of \"14\" for coordinate row 1 column 4 ): ");
     bool temp = true;
     int testinput; 
     while (temp)
@@ -108,10 +87,10 @@ void start()
         scanf("%d", &testinput);
         if (isValidInput(-100,testinput))
         {
-            game.playerPos= testinput;
+            playerPos = testinput;
             printf("valid input, let the games begin...\n\n");
             insertAi();
-            printBoard();
+            printBoard(board);
             temp = false;
         }
         else
@@ -126,7 +105,7 @@ per stated in the rules, this method checks if there are
 more than 10 zeros or 10 fours on the gameboard because if so 
 the game is over and whoever has 10 of each number wins the game
 */
-bool isDone()
+bool isDone(int board[7][7])
 {
     int numZeros = 0;
     int numFours = 0;
@@ -135,11 +114,11 @@ bool isDone()
     {
         for (int j = 1; j < 7; j++)
         {
-            if (game.board[i][j] == 4)
+            if (board[i][j] == 4)
             {
                 numFours++;
             }
-            if (game.board[i][j] == 0)
+            if (board[i][j] == 0)
             {
                 numZeros++;
             }
@@ -154,15 +133,13 @@ bool isDone()
 
     if (numZeros >= 10)
     {
-        game.isNotWon = false;
-        game.aiWon = true;
+        aiWon = true;
         return true;
     }
 
     if (numFours >= 10)
     {
-        game.isNotWon = false;
-        game.playerWon = true;
+        playerWon = true;
         return true;
     }
 
@@ -195,7 +172,7 @@ bool isValidInput(int cord,int testinput)
         (cord >= 51 && cord <= 56) ||
         (cord >= 61 && cord <= 66))
     {
-        if (cord != game.playerPos&& cord != game.aiPos)
+        if (cord != playerPos && cord != aiPos)
         {
             return true;
         }
@@ -211,14 +188,14 @@ bool isValidInput(int cord,int testinput)
 }
 
 //prints out the current state of the game board
-void printBoard()
+void printBoard(int board[7][7])
 {
 
     //Obtain the X and Y cordinates of the player and Ai
-    int pRow = game.playerPos/ 10;
-    int pColumn = game.playerPos % 10;
-    int aiRow = game.aiPos / 10;
-    int aiColumn = game.aiPos % 10;
+    int pRow = playerPos / 10;
+    int pColumn = playerPos % 10;
+    int aiRow = aiPos / 10;
+    int aiColumn = aiPos % 10;
 
     for (int i = 0; i < 7; i++)
     {
@@ -234,7 +211,7 @@ void printBoard()
             }
             else
             {
-                printf("%d  ", game.board[i][j]);
+                printf("%d  ", board[i][j]);
             }
         }
         printf("\n");
@@ -247,10 +224,10 @@ void doNextMoveAi()
     bool hasMoved = false;
     int moveInY = 0;
     int moveInX = 0;
-    int pRow = game.playerPos / 10;
-    int pColumn = game.playerPos % 10;
-    int aiRow = game.aiPos / 10;
-    int aiColumn = game.aiPos % 10;
+    int pRow = playerPos / 10;
+    int pColumn = playerPos % 10;
+    int aiRow = aiPos / 10;
+    int aiColumn = aiPos % 10;
 
     //My Ai is designed to move towards the player every turn
     //finds the closest open square and moves to it
@@ -286,7 +263,7 @@ void movePlayer(int move)
 {
     if (validPlayerMove(move))
     {
-        game.playerPos = move;
+        playerPos = move;
         return;
     }
 }
@@ -296,7 +273,7 @@ void moveAi(int move)
 {
     if (isValidInput(move,0))
     {
-        game.aiPos = move;
+        aiPos = move;
         return;
     }
 }
@@ -304,24 +281,24 @@ void moveAi(int move)
 //inserts Ai in an open space next to player at start of game
 void insertAi()
 {
-    if (isValidInput(game.playerPos + 1,0))
+    if (isValidInput(playerPos + 1,0))
     {
-        game.aiPos = game.playerPos + 1;
+        aiPos = playerPos + 1;
         return;
     }
-    if (isValidInput(game.playerPos - 1,0))
+    if (isValidInput(playerPos - 1,0))
     {
-        game.aiPos = game.playerPos - 1;
+        aiPos = playerPos - 1;
         return;
     }
-    if (isValidInput(game.playerPos - 10,0))
+    if (isValidInput(playerPos - 10,0))
     {
-        game.aiPos = game.playerPos - 10;
+        aiPos = playerPos - 10;
         return;
     }
-    if (isValidInput(game.playerPos + 10,0))
+    if (isValidInput(playerPos + 10,0))
     {
-        game.aiPos = game.playerPos + 10;
+        aiPos = playerPos + 10;
         return;
     }
 }
@@ -335,35 +312,35 @@ bool validPlayerMove(int num)
 {
     if (isValidInput(num,0))
     {
-        if (game.playerPos + 1 == num)
+        if (playerPos + 1 == num)
         {
             return true;
         }
-        if (game.playerPos - 1 == num)
+        if (playerPos - 1 == num)
         {
             return true;
         }
-        if (game.playerPos + 10 == num)
+        if (playerPos + 10 == num)
         {
             return true;
         }
-        if (game.playerPos - 10 == num)
+        if (playerPos - 10 == num)
         {
             return true;
         }
-        if (game.playerPos + 11 == num)
+        if (playerPos + 11 == num)
         {
             return true;
         }
-        if (game.playerPos - 11 == num)
+        if (playerPos - 11 == num)
         {
             return true;
         }
-        if (game.playerPos - 9 == num)
+        if (playerPos - 9 == num)
         {
             return true;
         }
-        if (game.playerPos + 9 == num)
+        if (playerPos + 9 == num)
         {
             return true;
         }
@@ -373,16 +350,16 @@ bool validPlayerMove(int num)
 }
 
 //cross compares adjacency lists and increases cords that are not shared between lists
-void incOctagonal()
+void incOctagonal(int pAdjList[], int aiAdjList[],int board[7][7])
 {
-    int rowPlayer = game.playerPos / 10;
-    int columnPlayer = game.playerPos % 10;
+    int rowPlayer = playerPos / 10;
+    int columnPlayer = playerPos % 10;
     for (int i = 0; i < 8; i++)
     {
         bool match = false;
         for (int j = 0; j < 8; j++)
         {
-            if (game.pAdjList[i] == game.aiAdjList[j])
+            if (pAdjList[i] == aiAdjList[j])
             {
                 match = true;
             }
@@ -392,20 +369,20 @@ void incOctagonal()
 
         if (match == false)
         {
-            incCord(game.pAdjList[i]);
+            incCord(pAdjList[i],board);
         }
     }
 }
 
 //cross compares adjacency lists and decreases cords that are not shared between lists
-void decOcatagonal()
+void decOcatagonal(int pAdjList[], int aiAdjList[], int board[7][7])
 {
     for (int i = 0; i < 8; i++)
     {
         bool match = false;
         for (int j = 0; j < 8; j++)
         {
-            if (game.aiAdjList[i] == game.pAdjList[j])
+            if (aiAdjList[i] == pAdjList[j])
             {
                 match = true;
             }
@@ -415,32 +392,32 @@ void decOcatagonal()
 
         if (match == false)
         {
-            decCord(game.aiAdjList[i]);
+            decCord(aiAdjList[i],board);
         }
     }
 }
 //increases given cord provided it is less than 4
-void incCord(int cord)
+void incCord(int cord,int board[7][7])
 {
     int rowCord = cord / 10;
     int colCord = cord % 10;
 
-    if (game.board[rowCord][colCord] < 4)
+    if (board[rowCord][colCord] < 4)
     {
-        game.board[rowCord][colCord]++;
+        board[rowCord][colCord]++;
         return;
     }
 }
 
 //decreses given cord provided it is more than 0
-void decCord(int cord)
+void decCord(int cord,int board[7][7])
 {
     int rowCord = cord / 10;
     int colCord = cord % 10;
 
-    if (game.board[rowCord][colCord] > 0)
+    if (board[rowCord][colCord] > 0)
     {
-        game.board[rowCord][colCord]--;
+        board[rowCord][colCord]--;
         return;
     }
 }
@@ -449,137 +426,137 @@ void decCord(int cord)
     If the cordinate is either out of bounds of contains the other player, 
     it will not be included (put as -1) becasue it is irrelevant for increment/decrement purpouses
     */
-void updateAdjList()
+void updateAdjList(int pAdjList[], int aiAdjList[])
 {
     //the adjacency list of the player is updated here
-    if (isValidInput(game.playerPos + 10,0) && game.playerPos + 10 != game.aiPos)
+    if (isValidInput(playerPos + 10,0) && playerPos + 10 != aiPos)
     {
-        game.pAdjList[0] = game.playerPos + 10;
+        pAdjList[0] = playerPos + 10;
     }
     else
     {
-        game.pAdjList[0] = -1;
+        pAdjList[0] = -1;
     }
-    if (isValidInput(game.playerPos + 1,0) && game.playerPos + 1 != game.aiPos)
+    if (isValidInput(playerPos + 1,0) && playerPos + 1 != aiPos)
     {
-        game.pAdjList[1] = game.playerPos + 1;
-    }
-    else
-    {
-        game.pAdjList[1] = -1;
-    }
-    if (isValidInput(game.playerPos + 11,0) && game.playerPos + 11 != game.aiPos)
-    {
-        game.pAdjList[2] = game.playerPos + 11;
+        pAdjList[1] = playerPos + 1;
     }
     else
     {
-        game.pAdjList[2] = -1;
+        pAdjList[1] = -1;
     }
-    if (isValidInput(game.playerPos + 9,0) && game.playerPos + 9 != game.aiPos)
+    if (isValidInput(playerPos + 11,0) && playerPos + 11 != aiPos)
     {
-        game.pAdjList[3] = game.playerPos+ 9;
-    }
-    else
-    {
-        game.pAdjList[3] = -1;
-    }
-    if (isValidInput(game.playerPos- 10,0) && game.playerPos- 10 != game.aiPos)
-    {
-        game.pAdjList[4] = game.playerPos- 10;
+        pAdjList[2] = playerPos + 11;
     }
     else
     {
-        game.pAdjList[4] = -1;
+        pAdjList[2] = -1;
     }
-    if (isValidInput(game.playerPos- 1,0) && game.playerPos- 1 != game.aiPos)
+    if (isValidInput(playerPos + 9,0) && playerPos + 9 != aiPos)
     {
-        game.pAdjList[5] = game.playerPos- 1;
-    }
-    else
-    {
-        game.pAdjList[5] = -1;
-    }
-    if (isValidInput(game.playerPos- 9,0) && game.playerPos- 9 != game.aiPos)
-    {
-        game.pAdjList[6] = game.playerPos- 9;
+        pAdjList[3] = playerPos + 9;
     }
     else
     {
-        game.pAdjList[6] = -1;
+        pAdjList[3] = -1;
     }
-    if (isValidInput(game.playerPos- 11,0) && game.playerPos- 11 != game.aiPos)
+    if (isValidInput(playerPos - 10,0) && playerPos - 10 != aiPos)
     {
-        game.pAdjList[7] = game.playerPos- 11;
+        pAdjList[4] = playerPos - 10;
     }
     else
     {
-        game.pAdjList[7] = -1;
+        pAdjList[4] = -1;
+    }
+    if (isValidInput(playerPos - 1,0) && playerPos - 1 != aiPos)
+    {
+        pAdjList[5] = playerPos - 1;
+    }
+    else
+    {
+        pAdjList[5] = -1;
+    }
+    if (isValidInput(playerPos - 9,0) && playerPos - 9 != aiPos)
+    {
+        pAdjList[6] = playerPos - 9;
+    }
+    else
+    {
+        pAdjList[6] = -1;
+    }
+    if (isValidInput(playerPos - 11,0) && playerPos - 11 != aiPos)
+    {
+        pAdjList[7] = playerPos - 11;
+    }
+    else
+    {
+        pAdjList[7] = -1;
     }
 
     //the adjacency list of the Ai is updated here
-    if (isValidInput(game.aiPos + 10,0) && game.aiPos + 10 != game.playerPos)
+    if (isValidInput(aiPos + 10,0) && aiPos + 10 != playerPos)
     {
-        game.aiAdjList[0] = game.aiPos + 10;
+        aiAdjList[0] = aiPos + 10;
     }
     else
     {
-        game.aiAdjList[0] = -1;
+        aiAdjList[0] = -1;
     }
-    if (isValidInput(game.aiPos + 1,0) && game.aiPos + 1 != game.playerPos)
+    if (isValidInput(aiPos + 1,0) && aiPos + 1 != playerPos)
     {
-        game.aiAdjList[1] = game.aiPos + 1;
-    }
-    else
-    {
-        game.aiAdjList[1] = -1;
-    }
-    if (isValidInput(game.aiPos + 11,0) && game.aiPos + 11 != game.playerPos)
-    {
-        game.aiAdjList[2] = game.aiPos + 11;
+        aiAdjList[1] = aiPos + 1;
     }
     else
     {
-        game.aiAdjList[2] = -1;
+        aiAdjList[1] = -1;
     }
-    if (isValidInput(game.aiPos + 9,0) && game.aiPos + 9 != game.playerPos)
+    if (isValidInput(aiPos + 11,0) && aiPos + 11 != playerPos)
     {
-        game.aiAdjList[3] = game.aiPos + 9;
-    }
-    else
-    {
-        game.aiAdjList[3] = -1;
-    }
-    if (isValidInput(game.aiPos - 10,0) && game.aiPos - 10 != game.playerPos)
-    {
-        game.aiAdjList[4] = game.aiPos - 10;
+        aiAdjList[2] = aiPos + 11;
     }
     else
     {
-        game.aiAdjList[4] = -1;
+        aiAdjList[2] = -1;
     }
-    if (isValidInput(game.aiPos - 1,0) && game.aiPos - 1 != game.playerPos)
+    if (isValidInput(aiPos + 9,0) && aiPos + 9 != playerPos)
     {
-        game.aiAdjList[5] = game.aiPos - 1;
-    }
-    else
-    {
-        game.aiAdjList[5] = -1;
-    }
-    if (isValidInput(game.aiPos - 9,0) && game.aiPos - 9 != game.playerPos)
-    {
-        game.aiAdjList[6] = game.aiPos - 9;
+        aiAdjList[3] = aiPos + 9;
     }
     else
     {
-        game.aiAdjList[6] = -1;
+        aiAdjList[3] = -1;
     }
-    if (isValidInput(game.aiPos - 11,0) && game.aiPos - 11 != game.playerPos)
+    if (isValidInput(aiPos - 10,0) && aiPos - 10 != playerPos)
     {
-        game.aiAdjList[7] = game.aiPos - 11;
+        aiAdjList[4] = aiPos - 10;
     }
     else
     {
-        game.aiAdjList[7] = -1;
+        aiAdjList[4] = -1;
+    }
+    if (isValidInput(aiPos - 1,0) && aiPos - 1 != playerPos)
+    {
+        aiAdjList[5] = aiPos - 1;
+    }
+    else
+    {
+        aiAdjList[5] = -1;
+    }
+    if (isValidInput(aiPos - 9,0) && aiPos - 9 != playerPos)
+    {
+        aiAdjList[6] = aiPos - 9;
+    }
+    else
+    {
+        aiAdjList[6] = -1;
+    }
+    if (isValidInput(aiPos - 11,0) && aiPos - 11 != playerPos)
+    {
+        aiAdjList[7] = aiPos - 11;
+    }
+    else
+    {
+        aiAdjList[7] = -1;
     }
 }
